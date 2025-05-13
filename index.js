@@ -1,30 +1,27 @@
-// index.js
 const express = require('express');
-const axios = require('axios');
+const fetch = require('node-fetch');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 
-app.get('/outfits/:userId', async (req, res) => {
-  const userId = req.params.userId;
-  const cursor = req.query.cursor || '';
-  const limit = req.query.limit || 25;
+app.get('/outfits', async (req, res) => {
+  const userId = req.query.userId;
+  const cursor = req.query.cursor || "";
+
+  if (!userId) return res.status(400).send({ error: 'Missing userId param' });
 
   try {
-    const response = await axios.get(`https://avatar.roblox.com/v1/users/${userId}/outfits?limit=${limit}&cursor=${cursor}`);
-    res.json(response.data);
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to fetch outfits' });
+    const robloxURL = `https://avatar.roblox.com/v1/users/${userId}/outfits?limit=25${cursor ? `&cursor=${cursor}` : ''}`;
+    const response = await fetch(robloxURL);
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).send({ error: 'Failed to fetch from Roblox' });
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('Roblox Outfit Proxy Active!');
-});
-
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 app.listen(port, () => {
   console.log(`Proxy running on port ${port}`);
 });
